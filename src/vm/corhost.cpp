@@ -1024,6 +1024,9 @@ HRESULT CorRuntimeHostBase::CreateDomain(LPCWSTR pwzFriendlyName,
                           pAppDomain);
 }
 
+#endif // FEATURE_COMINTEROP && !FEATURE_CORECLR
+
+#if defined(FEATURE_COMINTEROP)
 
 // Returns the default domain.
 HRESULT CorRuntimeHostBase::GetDefaultDomain(IUnknown ** pAppDomain)
@@ -2643,6 +2646,46 @@ HRESULT  GetCLRRuntimeHost(REFIID riid, IUnknown **ppUnk)
 
     return CorHost2::CreateObject(riid, (void**)ppUnk);
 }
+
+#if defined(FEATURE_CORECLR)
+
+HRESULT  GetCLRDefaultDomain(IUnknown ** pAppDomain)
+{
+	CONTRACTL
+    {
+        NOTHROW;
+        GC_TRIGGERS;
+        MODE_PREEMPTIVE;
+        ENTRY_POINT;
+    } CONTRACTL_END;
+
+    HRESULT hr = E_UNEXPECTED;
+    if (!g_fEEStarted)
+        return hr;
+
+    if( pAppDomain == NULL)
+        return E_POINTER;
+
+    BEGIN_ENTRYPOINT_NOTHROW;
+
+    BEGIN_EXTERNAL_ENTRYPOINT(&hr);
+    {
+        GCX_COOP_THREAD_EXISTS(GET_THREAD());
+
+        if (SystemDomain::System()) {
+            AppDomain* pCom = SystemDomain::System()->DefaultDomain();
+            if(pCom)
+                hr = pCom->GetComIPForExposedObject(pAppDomain);
+        }
+
+    }
+    END_EXTERNAL_ENTRYPOINT;
+    END_ENTRYPOINT_NOTHROW;
+
+    return hr;
+}
+
+#endif
 
 #if defined(FEATURE_COMINTEROP) && !defined(FEATURE_CORECLR)
 

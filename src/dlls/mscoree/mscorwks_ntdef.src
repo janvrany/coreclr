@@ -11,6 +11,7 @@ EXPORTS
 
 
         GetCLRRuntimeHost
+		GetCLRDefaultDomain
 
         ; dbgshim.dll depends on g_CLREngineMetrics having an ordinal of 2.
         ; This cannot change, or else CoreCLR debugging will not work.
